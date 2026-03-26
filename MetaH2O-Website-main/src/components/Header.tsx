@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Coins } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Header = () => {
@@ -32,14 +32,22 @@ const Header = () => {
           <img src="/images/logo.png" alt="Star Labs Logo" className="h-10 md:h-12 w-auto filter brightness-0 invert opacity-90 hover:opacity-100 transition-opacity" style={{ WebkitFilter: "drop-shadow(0px 0px 1px white)" }} />
         </a>
 
-        {/* CTA Button */}
+        {/* CTA Button — Investor Buy Tokens */}
         <a
           href="http://localhost:8081/"
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden md:block text-gold tracking-[0.2em] text-sm font-sans font-semibold uppercase hover:text-gold-light transition-colors duration-300"
+          className="hidden md:flex items-center gap-3 group relative overflow-hidden px-5 py-2.5 rounded-xl border border-[#EEA62C]/40 bg-[#EEA62C]/5 hover:bg-[#EEA62C]/10 hover:border-[#EEA62C]/70 transition-all duration-300 hover:shadow-[0_0_20px_rgba(238,166,44,0.2)]"
         >
-          Early Access
+          {/* shimmer sweep */}
+          <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-[#EEA62C]/10 to-transparent pointer-events-none" />
+          <span className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-[#EEA62C]/15 border border-[#EEA62C]/30 group-hover:bg-[#EEA62C]/25 transition-colors duration-300">
+            <Coins className="w-4 h-4 text-[#EEA62C]" />
+          </span>
+          <span className="relative flex flex-col leading-tight">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-[#EEA62C]/60 font-semibold font-sans">Investor?</span>
+            <span className="text-sm font-bold tracking-[0.1em] text-[#EEA62C] font-sans uppercase">Buy Tokens</span>
+          </span>
         </a>
         </nav>
       </header>
