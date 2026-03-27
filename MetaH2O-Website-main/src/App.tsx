@@ -9,6 +9,11 @@ import NotFound from "./pages/NotFound";
 import EcosystemLayout from "./pages/EcosystemLayout";
 import Celebrities from "./pages/Celebrities";
 import Products from "./pages/Products";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Profile from "./pages/Profile";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -17,18 +22,27 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/buy" element={<BuyNow />} />
-          <Route path="/ecosystem" element={<EcosystemLayout />}>
-            <Route path="celebrities" element={<Celebrities />} />
-            <Route path="products" element={<Products />} />
-          </Route>
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/buy" element={<BuyNow />} />
+            <Route path="/ecosystem" element={<EcosystemLayout />}>
+              <Route path="celebrities" element={<Celebrities />} />
+              <Route path="products" element={<Products />} />
+            </Route>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

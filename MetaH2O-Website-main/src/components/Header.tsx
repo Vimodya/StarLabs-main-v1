@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Coins } from "lucide-react";
+import { Menu, X, Coins, LogIn, UserPlus, User } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated, user, logout } = useAuth();
 
   const menuItems = [
     { label: "Vision", href: "#vision" },
@@ -97,8 +99,50 @@ const Header = () => {
               </ul>
             </nav>
             
-            <div className="pb-12 text-white/50 text-xs uppercase tracking-widest font-sans font-semibold">
-              Star Labs © 2026
+            <div className="pb-10 pt-6 border-t border-[#EEA62C]/15 space-y-3">
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-semibold font-sans uppercase tracking-[0.15em] transition-all"
+                    style={{ background: 'hsl(41 80% 55% / 0.15)', border: '1px solid hsl(41 80% 55% / 0.3)', color: '#EEA62C' }}
+                  >
+                    <User className="w-4 h-4" />
+                    {user?.name?.split(' ')[0] || 'Profile'}
+                  </Link>
+                  <button
+                    onClick={() => { logout(); setIsMenuOpen(false); }}
+                    className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-semibold font-sans uppercase tracking-[0.15em] transition-all text-left"
+                    style={{ border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)' }}
+                  >
+                    <LogIn className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-semibold font-sans uppercase tracking-[0.15em] transition-all"
+                    style={{ border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}
+                  >
+                    <LogIn className="w-4 h-4" />
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-bold font-sans uppercase tracking-[0.15em] transition-all"
+                    style={{ background: 'linear-gradient(135deg, hsl(41 80% 55%) 0%, hsl(36 70% 45%) 100%)', color: 'white' }}
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Create Account
+                  </Link>
+                </>
+              )}
+              <p className="text-white/25 text-xs uppercase tracking-widest font-sans font-semibold pt-2">Star Labs © 2026</p>
             </div>
           </motion.div>
         )}
