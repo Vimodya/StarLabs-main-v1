@@ -65,7 +65,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2">
               <img
-                src="/star-labs-logo.png"
+                src="/horizontal holdings.svg"
                 alt="Star Labs Logo"
                 className="w-14 h-14 object-contain"
               />
