@@ -19,7 +19,7 @@ const Login = () => {
     const result = await login(email, password);
     setLoading(false);
     if (result.success) {
-      navigate('/profile');
+      navigate('/');
     } else {
       setError(result.error || 'Login failed.');
     }

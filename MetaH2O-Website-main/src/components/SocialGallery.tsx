@@ -51,7 +51,7 @@ const CelebritySection = () => {
       {/* Infinite Glowing Slider */}
       <div className="relative w-full max-w-[1600px] mx-auto px-6 md:px-12 mt-10">
         <div className="overflow-hidden w-full relative py-10">
-          
+
           {/* Fading Edges for the Carousel */}
           <div className="absolute inset-y-0 left-0 w-16 md:w-48 bg-gradient-to-r from-card to-transparent z-10 pointer-events-none" />
           <div className="absolute inset-y-0 right-0 w-16 md:w-48 bg-gradient-to-l from-card to-transparent z-10 pointer-events-none" />
@@ -64,8 +64,8 @@ const CelebritySection = () => {
             {[...celebs, ...celebs].map((celeb, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, scale: 0.5, filter: "blur(10px)", boxShadow: "0px 0px 0px rgba(238, 166, 44, 0)" }}
-                animate={isInView ? { opacity: 1, scale: 1, filter: "blur(0px)", boxShadow: "0px 8px 30px -5px rgba(238, 166, 44, 0.4)" } : {}}
+                initial={{ opacity: 0, scale: 0.5, filter: "blur(10px)", boxShadow: "0px 0px 0px rgba(194, 146, 64, 0)" }}
+                animate={isInView ? { opacity: 1, scale: 1, filter: "blur(0px)", boxShadow: "0px 8px 30px -5px rgba(194, 146, 64, 0.3)" } : {}}
                 transition={{ duration: 0.8, delay: (index % celebs.length) * 0.05 + 0.3 }}
                 className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-card border border-primary/20 flex-shrink-0 w-40 sm:w-48 md:w-56 lg:w-64"
               >

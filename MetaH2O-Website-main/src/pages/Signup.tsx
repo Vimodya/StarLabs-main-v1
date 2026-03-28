@@ -31,7 +31,7 @@ const Signup = () => {
     setLoading(true);
     const result = await signup(name, email, password);
     setLoading(false);
-    if (result.success) navigate('/profile');
+    if (result.success) navigate('/');
     else setError(result.error || 'Signup failed.');
   };
 
@@ -46,13 +46,13 @@ const Signup = () => {
   return (
     <div
       className="min-h-screen flex items-center justify-center relative overflow-hidden py-12"
-      style={{ background: 'linear-gradient(160deg, hsl(198 25% 91%) 0%, hsl(37 70% 88%) 50%, hsl(41 80% 93%) 100%)' }}
+      style={{ background: 'linear-gradient(160deg, hsl(173 83% 95%) 0%, hsl(47 98% 90%) 50%, hsl(44 100% 95%) 100%)' }}
     >
       {/* Blobs */}
       <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full opacity-25 blur-[100px]"
-        style={{ background: 'radial-gradient(circle, hsl(41 80% 55%) 0%, transparent 70%)' }} />
+        style={{ background: 'radial-gradient(circle, hsl(44 100% 50%) 0%, transparent 70%)' }} />
       <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full opacity-20 blur-[90px]"
-        style={{ background: 'radial-gradient(circle, hsl(36 70% 41%) 0%, transparent 70%)' }} />
+        style={{ background: 'radial-gradient(circle, hsl(174 82% 37%) 0%, transparent 70%)' }} />
 
       <div className="relative z-10 w-full max-w-md px-4">
         {/* Logo */}

@@ -36,7 +36,7 @@ const Signup = () => {
     const result = await signup(name, email, password);
     setLoading(false);
     if (result.success) {
-      navigate('/profile');
+      navigate('/');
     } else {
       setError(result.error || 'Signup failed.');
     }

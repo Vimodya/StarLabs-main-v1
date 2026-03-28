@@ -13,9 +13,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import axiosInstance from "@/lib/axiosInstance";
+import { useAuth } from "@/contexts/AuthContext";
+
+/** Simple product price map for total amount calculation */
+const PRODUCT_PRICES: Record<string, number> = {
+  "24-pack": 29.99,
+  "individual-bottles": 4.99,
+  pallets: 299.99,
+};
 
 const BuyNow = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     companyName: "",
@@ -24,13 +34,60 @@ const BuyNow = () => {
     quantity: "",
     specialNotes: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    // TODO: Add form submission logic here
-    alert("Thank you for your inquiry! We will contact you shortly.");
-    navigate("/");
+    setError("");
+
+    if (!formData.product || !formData.quantity) {
+      setError("Please select a product and enter a quantity.");
+      return;
+    }
+
+    const qty = parseInt(formData.quantity, 10);
+    if (isNaN(qty) || qty < 1) {
+      setError("Please enter a valid quantity.");
+      return;
+    }
+
+    const unitPrice = PRODUCT_PRICES[formData.product] ?? 0;
+    const totalAmount = parseFloat((unitPrice * qty).toFixed(2));
+
+    const orderPayload = {
+      products: [
+        {
+          name: formData.product,
+          quantity: qty,
+          price: unitPrice,
+          buyerName: formData.name,
+          buyerEmail: formData.email,
+          companyName: formData.companyName,
+          specialNotes: formData.specialNotes,
+        },
+      ],
+      totalAmount,
+    };
+
+    // If authenticated, submit to backend; otherwise send a local inquiry
+    if (isAuthenticated) {
+      setLoading(true);
+      try {
+        await axiosInstance.post("/order/create", orderPayload);
+        alert("Order placed successfully! We will contact you shortly.");
+        navigate("/");
+      } catch (err) {
+        setError((err as Error).message || "Failed to place order. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Not logged in — still allow inquiry without backend storage
+      console.log("Inquiry (unauthenticated):", orderPayload);
+      alert("Thank you for your inquiry! We will contact you shortly.");
+      navigate("/");
+    }
   };
 
   const handleChange = (field: string, value: string) => {
@@ -82,6 +139,16 @@ const BuyNow = () => {
               Premium Alkaline Spring Water Inquiry
             </motion.p>
           </div>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mb-6 p-3 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-sm font-sans"
+            >
+              {error}
+            </motion.div>
+          )}
 
           <motion.form
             initial={{ opacity: 0, y: 20 }}
@@ -164,13 +231,13 @@ const BuyNow = () => {
                 </SelectTrigger>
                 <SelectContent className="bg-card border-gold/30">
                   <SelectItem value="24-pack" className="font-sans">
-                    24 Pack
+                    24 Pack — $29.99
                   </SelectItem>
                   <SelectItem value="individual-bottles" className="font-sans">
-                    Individual Bottles
+                    Individual Bottles — $4.99
                   </SelectItem>
                   <SelectItem value="pallets" className="font-sans">
-                    Pallets
+                    Pallets — $299.99
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -194,6 +261,14 @@ const BuyNow = () => {
                 className="bg-background/50 border-gold/30 text-foreground font-sans focus:border-gold transition-colors"
                 placeholder="1"
               />
+              {formData.product && formData.quantity && parseInt(formData.quantity) > 0 && (
+                <p className="text-foreground/60 font-sans text-xs mt-1">
+                  Estimated total:{" "}
+                  <span className="text-gold font-semibold">
+                    ${(PRODUCT_PRICES[formData.product] * parseInt(formData.quantity)).toFixed(2)}
+                  </span>
+                </p>
+              )}
             </div>
 
             {/* Special Notes */}
@@ -217,10 +292,33 @@ const BuyNow = () => {
             <div className="pt-6">
               <Button
                 type="submit"
-                className="w-full bg-gold hover:bg-gold-light text-cobalt-deep font-sans text-sm uppercase tracking-luxury py-6 transition-all duration-300"
+                disabled={loading}
+                className="w-full bg-gold hover:bg-gold-light text-cobalt-deep font-sans text-sm uppercase tracking-luxury py-6 transition-all duration-300 disabled:opacity-60"
               >
-                Submit Inquiry
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                    Placing Order…
+                  </span>
+                ) : (
+                  isAuthenticated ? "Place Order" : "Submit Inquiry"
+                )}
               </Button>
+              {!isAuthenticated && (
+                <p className="text-center text-foreground/50 font-sans text-xs mt-3">
+                  <a
+                    href="/login"
+                    className="text-gold hover:underline"
+                    onClick={(e) => { e.preventDefault(); navigate("/login"); }}
+                  >
+                    Sign in
+                  </a>{" "}
+                  to have your order saved to your account.
+                </p>
+              )}
             </div>
           </motion.form>
 

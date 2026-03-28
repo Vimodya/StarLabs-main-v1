@@ -4,8 +4,10 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
+  const { isAuthenticated, user } = useAuth();
   const { connecting, disconnect } = useWallet();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
@@ -53,6 +55,7 @@ const Navbar = () => {
     { href: "#partners", label: "Partners", isAnchor: true },
     { href: "/my-investments", label: "My Investment", isAnchor: false },
     { href: "/buy", label: "Buy Tokens", isAnchor: false },
+    ...(isAuthenticated ? [{ href: "/profile", label: "My Profile", isAnchor: false }] : []),
   ];
 
   return (

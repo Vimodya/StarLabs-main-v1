@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { fetchUserProfile } from '@/services/api';
 import {
   User, Music, ShoppingCart, History, Trophy,
   LogOut, Star, MapPin, Calendar, Edit3, Save, X,
-  ShoppingBag, Trash2, ExternalLink, Users, Zap, Gift
+  ShoppingBag, Trash2, ExternalLink, Users, Zap, Gift,
+  Bell, CheckCircle, Clock, Package
 } from 'lucide-react';
 
-type TabId = 'profile' | 'artists' | 'cart' | 'history' | 'rewards';
+type TabId = 'profile' | 'celebrities' | 'products' | 'orders' | 'notifications' | 'cart' | 'rewards';
 
 const Profile = () => {
   const { user, logout, updateUser } = useAuth();
@@ -17,6 +19,24 @@ const Profile = () => {
   const [editName, setEditName] = useState(user?.name || '');
   const [editBio, setEditBio] = useState(user?.bio || '');
   const [editLocation, setEditLocation] = useState(user?.location || '');
+
+  useEffect(() => {
+    if (user) {
+      // Re-fetch profile to get the latest followed lists, products, etc.
+      fetchUserProfile().then((res) => {
+        // The API response might have the user object nested or top-level.
+        // AuthContext's mapApiUser would be better here, but we can just use updateUser.
+        const userData = res.user ?? res;
+        // Since updateUser in AuthContext expects a Partial<User>, we map relevant fields.
+        updateUser({
+          followedCelebrityList: userData.followedCelebrityList || [],
+          buyProductList: userData.buyProductList || [],
+          notifiedProductList: userData.notifiedProductList || [],
+          orders: userData.orders || []
+        });
+      }).catch(err => console.error("Failed to refresh profile:", err));
+    }
+  }, []);
 
   if (!user) {
     navigate('/login');
@@ -42,9 +62,11 @@ const Profile = () => {
 
   const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
     { id: 'profile', label: 'Profile', icon: <User className="w-4 h-4" /> },
-    { id: 'artists', label: 'Following', icon: <Music className="w-4 h-4" /> },
+    { id: 'celebrities', label: 'Celebrities', icon: <Users className="w-4 h-4" /> },
+    { id: 'products', label: 'My Products', icon: <ShoppingBag className="w-4 h-4" /> },
+    { id: 'orders', label: 'My Orders', icon: <Package className="w-4 h-4" /> },
+    { id: 'notifications', label: 'Waitlist', icon: <Bell className="w-4 h-4" /> },
     { id: 'cart', label: 'Cart', icon: <ShoppingCart className="w-4 h-4" /> },
-    { id: 'history', label: 'History', icon: <History className="w-4 h-4" /> },
     { id: 'rewards', label: 'Rewards', icon: <Trophy className="w-4 h-4" /> },
   ];
 
@@ -123,9 +145,9 @@ const Profile = () => {
             {/* Stats */}
             <div className="flex gap-4 sm:gap-6">
               {[
-                { label: 'Purchases', value: user.purchaseHistory.length },
-                { label: 'Cart', value: user.cart.length },
-                { label: 'Spent', value: `$${totalSpent.toFixed(2)}` },
+                { label: 'Orders', value: user.orders?.length || 0 },
+                { label: 'Followed', value: (user.followedCelebrityList?.length || 0) + user.followedArtists.length },
+                { label: 'Waitlist', value: user.notifiedProductList?.length || 0 },
               ].map(stat => (
                 <div key={stat.label} className="text-center">
                   <div className="text-xl font-bold text-[#FBD515]">{stat.value}</div>
@@ -223,38 +245,151 @@ const Profile = () => {
             </div>
           )}
 
-          {/* ── FOLLOWED ARTISTS TAB ── */}
-          {activeTab === 'artists' && (
+          {/* ── CELEBRITIES TAB ── */}
+          {activeTab === 'celebrities' && (
             <div className="p-8">
-              <h2 className="text-lg font-bold text-white mb-6">Followed Artists <span className="text-[#FBD515] text-base ml-2">({user.followedArtists.length})</span></h2>
-              {user.followedArtists.length === 0 ? (
+              <h2 className="text-lg font-bold text-white mb-6">Followed Celebrities 
+                <span className="text-[#FBD515] text-base ml-2">
+                  ({(user.followedCelebrityList?.length || 0) + (user.followedArtists?.length || 0)})
+                </span>
+              </h2>
+              
+              <div className="space-y-8">
+                {/* New Celebrity List */}
+                {user.followedCelebrityList && user.followedCelebrityList.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {user.followedCelebrityList.map(celeb => (
+                      <div key={celeb.id || celeb._id}
+                        className="group p-4 rounded-2xl border border-[#FBD515]/10 hover:border-[#FBD515]/30 transition-all duration-200 cursor-pointer overflow-hidden relative"
+                        style={{ background: 'rgba(251,213,21,0.04)' }}>
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-[#FBD515]/30">
+                            {celeb.profilePicture ? (
+                              <img src={celeb.profilePicture} alt={celeb.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#FBD515] to-[#E6A817] text-[#0a0806] font-bold text-xl">
+                                {celeb.name?.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <h3 className="text-white font-semibold text-sm group-hover:text-[#FBD515] transition-colors">{celeb.name}</h3>
+                              {celeb.isVerified && <CheckCircle className="w-3 h-3 text-blue-400 fill-blue-400/20" />}
+                            </div>
+                            <p className="text-[#9a8a6a] text-xs mt-0.5">{celeb.category}</p>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FBD515]/10 text-[#FBD515]/80 border border-[#FBD515]/20 mt-2 inline-block font-semibold">Following</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Legacy Artist List */}
+                {user.followedArtists.length > 0 && (
+                  <>
+                    <h3 className="text-sm font-semibold text-[#9a8a6a] uppercase tracking-wider mb-4">Artists</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {user.followedArtists.map(artist => (
+                        <div key={artist.id}
+                          className="group p-4 rounded-2xl border border-[#FBD515]/10 hover:border-[#FBD515]/30 transition-all duration-200 cursor-pointer"
+                          style={{ background: 'rgba(251,213,21,0.04)' }}>
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold flex-shrink-0 border border-[#FBD515]/30"
+                              style={{ background: 'linear-gradient(135deg, #FBD515 0%, #E6A817 100%)', color: '#0a0806' }}>
+                              {artist.name.charAt(0)}
+                            </div>
+                            <div>
+                              <h3 className="text-white font-semibold text-sm group-hover:text-[#FBD515] transition-colors">{artist.name}</h3>
+                              <p className="text-[#9a8a6a] text-xs mt-0.5">{artist.genre}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {((user.followedCelebrityList?.length || 0) === 0 && user.followedArtists.length === 0) && (
+                  <div className="text-center py-16">
+                    <Music className="w-12 h-12 text-[#FBD515]/30 mx-auto mb-4" />
+                    <p className="text-[#9a8a6a]">You haven't followed any celebrities yet.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── MY PRODUCTS TAB ── */}
+          {activeTab === 'products' && (
+            <div className="p-8">
+              <h2 className="text-lg font-bold text-white mb-6">Purchased Products 
+                <span className="text-[#FBD515] text-base ml-2">({user.buyProductList?.length || 0})</span>
+              </h2>
+              {(!user.buyProductList || user.buyProductList.length === 0) ? (
                 <div className="text-center py-16">
-                  <Music className="w-12 h-12 text-[#FBD515]/30 mx-auto mb-4" />
-                  <p className="text-[#9a8a6a]">You haven't followed any artists yet.</p>
+                  <ShoppingBag className="w-12 h-12 text-[#FBD515]/30 mx-auto mb-4" />
+                  <p className="text-[#9a8a6a]">You haven't purchased any products yet.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {user.followedArtists.map(artist => (
-                    <div key={artist.id}
-                      className="group p-4 rounded-2xl border border-[#FBD515]/10 hover:border-[#FBD515]/30 transition-all duration-200 cursor-pointer"
-                      style={{ background: 'rgba(251,213,21,0.04)' }}>
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold flex-shrink-0 border border-[#FBD515]/30"
-                          style={{ background: 'linear-gradient(135deg, #FBD515 0%, #E6A817 100%)', color: '#0a0806' }}>
-                          {artist.name.charAt(0)}
-                        </div>
-                        <div>
-                          <h3 className="text-white font-semibold text-sm group-hover:text-[#FBD515] transition-colors">{artist.name}</h3>
-                          <p className="text-[#9a8a6a] text-xs mt-0.5">{artist.genre}</p>
-                          <p className="text-[#FBD515]/70 text-xs mt-1 flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            {artist.followers.toLocaleString()} followers
-                          </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {user.buyProductList.map(product => (
+                    <div key={product.id || product._id}
+                      className="group bg-black/40 rounded-2xl border border-[#FBD515]/10 overflow-hidden hover:border-[#FBD515]/30 transition-all">
+                      <div className="aspect-square relative overflow-hidden">
+                        <img src={product.images?.[0] || product.image} alt={product.name || product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute top-3 right-3 px-2 py-1 rounded-md bg-green-500/20 text-green-400 text-[10px] font-bold uppercase border border-green-500/30">
+                          Owned
                         </div>
                       </div>
-                      <div className="mt-3 flex gap-2">
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#FBD515]/10 text-[#FBD515]/80 border border-[#FBD515]/20">Following</span>
+                      <div className="p-4">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <h3 className="text-white font-bold text-sm truncate">{product.name || product.title}</h3>
+                          <span className="text-[#FBD515] font-bold text-xs">
+                            {product.currency === 'USD' ? '$' : product.currency} {product.price}
+                          </span>
+                        </div>
+                        <p className="text-[#9a8a6a] text-xs line-clamp-2">{product.subtitle || 'Purchased Product'}</p>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── NOTIFICATIONS / WAITLIST TAB ── */}
+          {activeTab === 'notifications' && (
+            <div className="p-8">
+              <h2 className="text-lg font-bold text-white mb-6">Product Waitlist 
+                <span className="text-[#FBD515] text-base ml-2">({user.notifiedProductList?.length || 0})</span>
+              </h2>
+              {(!user.notifiedProductList || user.notifiedProductList.length === 0) ? (
+                <div className="text-center py-16">
+                  <Bell className="w-12 h-12 text-[#FBD515]/30 mx-auto mb-4" />
+                  <p className="text-[#9a8a6a]">Your waitlist is empty.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {user.notifiedProductList.map(product => (
+                    <div key={product.id || product._id}
+                      className="flex items-center gap-4 p-4 rounded-2xl border border-[#FBD515]/10 bg-black/40 hover:border-[#FBD515]/30 transition-all">
+                      <div className="w-20 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-[#FBD515]/20">
+                        <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-grow">
+                        <h3 className="text-white font-bold text-sm">{product.title}</h3>
+                        <p className="text-[#9a8a6a] text-xs mt-1">{product.subtitle}</p>
+                        <div className="flex items-center gap-3 mt-2">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FBD515]/10 text-[#FBD515] border border-[#FBD515]/20 uppercase font-bold tracking-wider">
+                            {product.status || 'Coming Soon'}
+                          </span>
+                        </div>
+                      </div>
+                      <button className="p-2.5 rounded-xl border border-[#FBD515]/20 text-[#FBD515] hover:bg-[#FBD515]/10 transition-colors">
+                        <Bell className="w-4 h-4" />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -315,54 +450,64 @@ const Profile = () => {
             </div>
           )}
 
-          {/* ── HISTORY TAB ── */}
-          {activeTab === 'history' && (
+          {/* ── ORDERS TAB ── */}
+          {activeTab === 'orders' && (
             <div className="p-8">
-              <h2 className="text-lg font-bold text-white mb-6">
-                Purchase History <span className="text-[#FBD515] text-base ml-2">({user.purchaseHistory.length})</span>
+              <h2 className="text-lg font-bold text-white mb-6">Order History 
+                <span className="text-[#FBD515] text-base ml-2">({user.orders?.length || 0})</span>
               </h2>
-              {user.purchaseHistory.length === 0 ? (
+              {(!user.orders || user.orders.length === 0) ? (
                 <div className="text-center py-16">
-                  <History className="w-12 h-12 text-[#FBD515]/30 mx-auto mb-4" />
-                  <p className="text-[#9a8a6a]">No purchases yet.</p>
+                  <Package className="w-12 h-12 text-[#FBD515]/30 mx-auto mb-4" />
+                  <p className="text-[#9a8a6a]">No orders found.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {user.purchaseHistory.map(purchase => (
-                    <div key={purchase.id}
-                      className="flex items-center gap-4 p-4 rounded-2xl border border-[#FBD515]/10 hover:border-[#FBD515]/25 transition-all"
-                      style={{ background: 'rgba(251,213,21,0.04)' }}>
-                      <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 border border-[#FBD515]/20"
-                        style={{ background: 'rgba(251,213,21,0.08)' }}>
-                        <ShoppingBag className="w-6 h-6 text-[#FBD515]/60" />
-                      </div>
-                      <div className="flex-grow min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <h3 className="text-white text-sm font-semibold truncate">{purchase.name}</h3>
-                          <span className={`text-xs px-2 py-0.5 rounded-full border flex-shrink-0 ${badgeColors[purchase.type]}`}>{purchase.type}</span>
+                <div className="space-y-4">
+                  {user.orders.map(order => (
+                    <div key={order._id}
+                      className="p-5 rounded-2xl border border-[#FBD515]/10 bg-black/40 hover:border-[#FBD515]/20 transition-all shadow-lg">
+                      <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-white/5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-[#FBD515]/10 flex items-center justify-center border border-[#FBD515]/20">
+                            <Package className="w-5 h-5 text-[#FBD515]" />
+                          </div>
+                          <div>
+                            <p className="text-xs text-[#7a6a4a] font-semibold uppercase tracking-wider mb-0.5">Order ID</p>
+                            <p className="text-white font-mono text-sm">#{order._id.slice(-8).toUpperCase()}</p>
+                          </div>
                         </div>
-                        <p className="text-[#9a8a6a] text-xs mb-1">by {purchase.artist}</p>
-                        <div className="flex items-center gap-2 text-xs text-[#7a6a4a]">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(purchase.purchaseDate).toLocaleDateString()}
-                          <span className="mx-1">·</span>
-                          <span className="font-mono">{purchase.txHash}</span>
-                          <ExternalLink className="w-3 h-3 text-[#FBD515]/50 hover:text-[#FBD515] cursor-pointer" />
+                        <div className="flex items-center gap-8">
+                          <div className="text-right">
+                            <p className="text-xs text-[#7a6a4a] font-semibold uppercase tracking-wider mb-0.5">Date</p>
+                            <p className="text-white text-sm">{new Date(order.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-[#7a6a4a] font-semibold uppercase tracking-wider mb-0.5">Total</p>
+                            <p className="text-[#FBD515] font-bold text-base">${order.totalAmount.toFixed(2)}</p>
+                          </div>
+                          <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5 ${
+                            order.status === 'completed' 
+                              ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                              : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                          }`}>
+                            {order.status === 'completed' ? <CheckCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                            {order.status}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex-shrink-0">
-                        <span className="text-[#FBD515] font-bold">${purchase.price}</span>
-                        <p className="text-green-400 text-xs text-right mt-0.5">✓ Complete</p>
+                      <div className="space-y-3">
+                        {order.products.map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[#9a8a6a] font-mono">x{item.quantity}</span>
+                              <span className="text-white font-medium">{item.productName}</span>
+                            </div>
+                            <span className="text-[#9a8a6a]">${(item.price * item.quantity).toFixed(2)}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
-
-                  {/* Total */}
-                  <div className="mt-4 p-4 rounded-2xl border border-[#FBD515]/20 flex justify-between items-center"
-                    style={{ background: 'rgba(251,213,21,0.06)' }}>
-                    <span className="text-[#9a8a6a] text-sm font-medium">Total Spent</span>
-                    <span className="text-[#FBD515] text-xl font-bold">${totalSpent.toFixed(2)}</span>
-                  </div>
                 </div>
               )}
             </div>

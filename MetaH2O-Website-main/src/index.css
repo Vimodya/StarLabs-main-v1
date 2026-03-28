@@ -8,66 +8,63 @@
 
 @layer base {
   :root {
-    /* Star Labs Uploaded Coastal Palette */
+    /* Cream & Gold Luxury Palette */
     
-    /* 1. Ice Blue (Backgrounds) */
-    --background: 198 25% 91%;
-    --foreground: 29 80% 21%; /* 6. Deep Brown */
+    --background: 42 83% 93%;
+    --foreground: 0 0% 18%;
 
     /* Card surfaces */
-    --card: 198 25% 95%;
-    --card-foreground: 29 80% 21%;
+    --card: 42 80% 95%;
+    --card-foreground: 0 0% 18%;
 
     /* Popover */
-    --popover: 198 25% 91%;
-    --popover-foreground: 29 80% 21%;
+    --popover: 42 83% 93%;
+    --popover-foreground: 0 0% 18%;
 
-    /* Primary - 4. Mustard Gold */
-    --primary: 41 80% 55%;
-    --primary-foreground: 198 25% 91%;
+    /* Primary - Rich Gold (#C29240) */
+    --primary: 38 52% 51%;
+    --primary-foreground: 42 83% 93%;
 
-    /* Secondary - 2. Sea Foam / Pale Slate */
-    --secondary: 196 23% 76%;
-    --secondary-foreground: 29 80% 21%;
+    /* Secondary - Taupe (#B2A3A1) */
+    --secondary: 9 11% 66%;
+    --secondary-foreground: 42 83% 93%;
 
-    /* Muted - 3. Soft Sand */
-    --muted: 37 70% 75%;
-    --muted-foreground: 29 60% 35%;
+    /* Muted */
+    --muted: 42 30% 88%;
+    --muted-foreground: 0 0% 40%;
 
-    /* Accent - 5. Bronze / Rust */
-    --accent: 36 70% 41%;
-    --accent-foreground: 198 25% 91%;
+    /* Accent - Gold Shine */
+    --accent: 38 52% 55%;
+    --accent-foreground: 42 83% 93%;
 
     /* Destructive */
     --destructive: 0 84% 60%;
-    --destructive-foreground: 198 25% 91%;
+    --destructive-foreground: 42 83% 93%;
 
     /* Borders and inputs */
-    --border: 196 23% 76%;
-    --input: 196 23% 76%;
-    --ring: 41 80% 55%;
+    --border: 0 0% 18% / 0.1;
+    --input: 0 0% 18% / 0.1;
+    --ring: 38 52% 51%;
 
     --radius: 0.5rem;
 
     /* Custom tokens */
-    --gold: 41 80% 55%;
-    --gold-light: 37 70% 75%;
-    --cobalt-deep: 29 80% 21%;
-    --cobalt: 36 70% 41%;
-    --cobalt-light: 196 23% 76%;
+    --cream-champagne: 42 83% 93%;
+    --gold-rich: 38 52% 51%;
+    --taupe-muted: 9 11% 66%;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(180deg, hsl(57 100% 91%) 0%, hsl(0 0% 100%) 100%);
-    --gradient-overlay: linear-gradient(180deg, transparent 0%, hsl(57 100% 91% / 0.8) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(45 100% 50%) 0%, hsl(45 100% 65%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(38 52% 51% / 0.1) 0%, hsl(9 11% 66% / 0.1) 100%);
+    --gradient-overlay: linear-gradient(180deg, transparent 0%, hsl(42 83% 93% / 0.8) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(38 52% 51%) 0%, hsl(9 11% 66%) 100%);
 
     /* Typography */
     --font-serif: 'Playfair Display', Georgia, serif;
     --font-sans: 'Inter', system-ui, sans-serif;
 
     /* Shadows */
-    --shadow-elegant: 0 25px 50px -12px hsl(48 95% 53% / 0.15);
-    --shadow-glow: 0 0 60px hsl(48 95% 53% / 0.2);
+    --shadow-elegant: 0 20px 40px -12px rgba(194, 146, 64, 0.15);
+    --shadow-glow: 0 0 50px hsl(38 52% 51% / 0.1);
   }
 
   * {

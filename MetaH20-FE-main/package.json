@@ -50,6 +50,7 @@
     "@solana/wallet-standard-wallet-adapter-react": "^1.1.4",
     "@solana/web3.js": "^1.98.4",
     "@tanstack/react-query": "^5.83.0",
+    "axios": "^1.13.6",
     "bs58": "^6.0.0",
     "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.1",

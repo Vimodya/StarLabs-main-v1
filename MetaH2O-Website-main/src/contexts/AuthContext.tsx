@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import axiosInstance from '@/lib/axiosInstance';
 
 export interface User {
   id: string;
@@ -59,80 +60,90 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const MOCK_USER: User = {
-  id: '1',
-  name: 'Alex Rivera',
-  email: 'alex@starlabs.io',
-  bio: 'Beauty enthusiast & NFT collector. Early adopter of the StarLabs ecosystem.',
-  location: 'Los Angeles, CA',
-  joinedDate: '2024-01-15',
-  followedArtists: [
-    { id: '1', name: 'Luna Beats', genre: 'Electronic', followers: 24500 },
-    { id: '2', name: 'The Aura Collective', genre: 'Indie Pop', followers: 18200 },
-    { id: '3', name: 'Cipher Wave', genre: 'Hip-Hop', followers: 52100 },
-  ],
-  cart: [
-    { id: '1', name: 'Genesis Drop #047', artist: 'Luna Beats', price: 0.85, type: 'NFT' },
-    { id: '2', name: 'Aura Bundle Pack', artist: 'The Aura Collective', price: 2.5, type: 'Bundle' },
-  ],
-  purchaseHistory: [
-    { id: '1', name: 'Neon Dreams #012', artist: 'Cipher Wave', price: 1.2, type: 'NFT', purchaseDate: '2024-03-10', txHash: '5Kj9x...mPqR' },
-    { id: '2', name: 'StarLabs Silver Pass', artist: 'StarLabs', price: 50, type: 'Token', purchaseDate: '2024-02-20', txHash: '8Yz3n...wQvL' },
-    { id: '3', name: 'Frequency Pack', artist: 'Luna Beats', price: 3.0, type: 'Bundle', purchaseDate: '2024-01-30', txHash: '2Rt7k...xNbA' },
-  ],
-  rewards: [
-    { id: '1', title: 'Early Adopter', description: 'Joined during the genesis phase', points: 500, earned: true, earnedDate: '2024-01-15', icon: '🌟' },
-    { id: '2', title: 'First Purchase', description: 'Made your first purchase on StarLabs', points: 200, earned: true, earnedDate: '2024-01-30', icon: '🛒' },
-    { id: '3', title: 'Social Butterfly', description: 'Follow 5 artists', points: 150, earned: false, icon: '🦋' },
-    { id: '4', title: 'Diamond Collector', description: 'Own 10 NFTs simultaneously', points: 1000, earned: false, icon: '💎' },
-    { id: '5', title: 'Loyal Fan', description: 'Be active for 6 consecutive months', points: 750, earned: false, icon: '🏆' },
-  ],
-};
+/** Maps a raw API user object to our frontend User shape */
+const mapApiUser = (apiUser: Record<string, unknown>): User => ({
+  id: String(apiUser._id ?? apiUser.id ?? ''),
+  name: String(apiUser.name ?? ''),
+  email: String(apiUser.email ?? ''),
+  bio: apiUser.bio ? String(apiUser.bio) : undefined,
+  location: apiUser.location ? String(apiUser.location) : undefined,
+  joinedDate: apiUser.createdAt
+    ? new Date(String(apiUser.createdAt)).toISOString().split('T')[0]
+    : new Date().toISOString().split('T')[0],
+  followedArtists: Array.isArray(apiUser.followedArtists)
+    ? (apiUser.followedArtists as Record<string, unknown>[]).map((a) => ({
+      id: String(a._id ?? a.id ?? ''),
+      name: String(a.name ?? ''),
+      genre: String(a.genre ?? ''),
+      followers: Number(a.followers ?? 0),
+    }))
+    : [],
+  cart: [],
+  purchaseHistory: [],
+  rewards: [],
+});
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('starlabs_web_user');
-    if (stored) {
-      try { setUser(JSON.parse(stored)); } catch { localStorage.removeItem('starlabs_web_user'); }
+    const token = localStorage.getItem('starlabs_token');
+    if (stored && token) {
+      try {
+        setUser(JSON.parse(stored));
+        // Re-fetch fresh profile in the background
+        axiosInstance.get('/user/profile').then((res) => {
+          const fresh = mapApiUser(res.data.user ?? res.data);
+          setUser(fresh);
+          localStorage.setItem('starlabs_web_user', JSON.stringify(fresh));
+        }).catch(() => {
+          // Token likely expired; clear session
+          localStorage.removeItem('starlabs_web_user');
+          localStorage.removeItem('starlabs_token');
+          setUser(null);
+        });
+      } catch {
+        localStorage.removeItem('starlabs_web_user');
+        localStorage.removeItem('starlabs_token');
+      }
     }
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    await new Promise(res => setTimeout(res, 900));
-    if (email && password.length >= 6) {
-      const u = { ...MOCK_USER, email };
-      setUser(u);
-      localStorage.setItem('starlabs_web_user', JSON.stringify(u));
+    try {
+      const res = await axiosInstance.post('/auth/login', { email, password });
+      const { token, user: apiUser } = res.data;
+      const mapped = mapApiUser(apiUser);
+      localStorage.setItem('starlabs_token', token);
+      localStorage.setItem('starlabs_web_user', JSON.stringify(mapped));
+      setUser(mapped);
       return { success: true };
+    } catch (err) {
+      return { success: false, error: (err as Error).message || 'Login failed.' };
     }
-    return { success: false, error: 'Invalid email or password.' };
   };
 
   const signup = async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    await new Promise(res => setTimeout(res, 900));
     if (!name || !email || password.length < 6)
       return { success: false, error: 'Please fill all fields. Password must be at least 6 characters.' };
-    const u: User = {
-      ...MOCK_USER,
-      id: Date.now().toString(),
-      name,
-      email,
-      joinedDate: new Date().toISOString().split('T')[0],
-      followedArtists: [],
-      cart: [],
-      purchaseHistory: [],
-      rewards: [MOCK_USER.rewards[0]],
-    };
-    setUser(u);
-    localStorage.setItem('starlabs_web_user', JSON.stringify(u));
-    return { success: true };
+    try {
+      const res = await axiosInstance.post('/auth/register', { name, email, password });
+      const { token, user: apiUser } = res.data;
+      const mapped = mapApiUser(apiUser);
+      localStorage.setItem('starlabs_token', token);
+      localStorage.setItem('starlabs_web_user', JSON.stringify(mapped));
+      setUser(mapped);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: (err as Error).message || 'Signup failed.' };
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('starlabs_web_user');
+    localStorage.removeItem('starlabs_token');
   };
 
   const updateUser = (updates: Partial<User>) => {

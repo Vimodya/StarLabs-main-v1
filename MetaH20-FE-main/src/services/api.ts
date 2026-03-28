@@ -1,3 +1,8 @@
+import axiosInstance from '@/lib/axiosInstance';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Types for the Solana ICO backend (existing)
+// ─────────────────────────────────────────────────────────────────────────────
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export interface Transaction {
@@ -47,6 +52,24 @@ export interface CreateTransactionRequest {
   exchangeRate: number;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Types for the MongoDB backend (new)
+// ─────────────────────────────────────────────────────────────────────────────
+export interface OrderProduct {
+  name: string;
+  quantity: number;
+  price: number;
+  [key: string]: unknown;
+}
+
+export interface CreateOrderRequest {
+  products: OrderProduct[];
+  totalAmount: number;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Solana ICO API Service (existing fetch-based, kept intact)
+// ─────────────────────────────────────────────────────────────────────────────
 class ApiService {
   private baseUrl: string;
 
@@ -72,7 +95,7 @@ class ApiService {
     return data.data || data;
   }
 
-  // Create a new transaction
+  // Create a new blockchain transaction record
   async createTransaction(request: CreateTransactionRequest): Promise<Transaction> {
     return this.request<Transaction>('/transactions', {
       method: 'POST',
@@ -113,3 +136,25 @@ class ApiService {
 }
 
 export const api = new ApiService(API_BASE_URL);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MongoDB Backend helpers (use central axiosInstance with JWT)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Create an order in MongoDB (POST /order/create) */
+export const createOrder = async (payload: CreateOrderRequest) => {
+  const res = await axiosInstance.post('/order/create', payload);
+  return res.data;
+};
+
+/** Follow a celebrity (POST /user/follow) */
+export const followCelebrity = async (celebrityId: string) => {
+  const res = await axiosInstance.post('/user/follow', { celebrityId });
+  return res.data;
+};
+
+/** Fetch the logged-in user's profile (GET /user/profile) */
+export const fetchUserProfile = async () => {
+  const res = await axiosInstance.get('/user/profile');
+  return res.data;
+};
