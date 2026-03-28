@@ -45,7 +45,7 @@ const Index = () => {
         <BrandsSection />
         {/* <Ecosystem /> */}
         <TokenUtilitySection />
-        <CtaSection />
+        {/* <CtaSection /> */}
       </main>
       <Footer />
     </div>
