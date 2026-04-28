@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaH2O ICO - Token Swap</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .wallet-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .disconnect-btn {
+            background: #ef4444;
+        }
+
+        .disconnect-btn:hover {
+            background: #dc2626;
+        }
+
+        .wallet-info {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .wallet-address {
+            font-size: 12px;
+            color: #666;
+            word-break: break-all;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .swap-info {
+            background: #f0f9ff;
+            border: 2px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .swap-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .swap-info-label {
+            color: #1e40af;
+            font-weight: 600;
+        }
+
+        .swap-info-value {
+            color: #1e40af;
+            font-weight: 700;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .tx-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .tx-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Import from CDN (you'll need to include these in production)
+        const PROGRAM_ID = "4JthSceLk69nmUyp2MhokzP1DQZ7KHZ3sUndMSVHXG44";
+        const USDT_MINT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
+        const META_MINT = "Meta7vTTVcggN4dDxdi8yJ9dr4N6FsZS2pSaaA8y2KF";
+        const RPC_URL = "https://api.mainnet-beta.solana.com"; // Change to your RPC
+
+        function App() {
+            const [wallet, setWallet] = useState(null);
+            const [connected, setConnected] = useState(false);
+            const [usdtAmount, setUsdtAmount] = useState('');
+            const [metaAmount, setMetaAmount] = useState('0');
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+            const [success, setSuccess] = useState('');
+            const [txSignature, setTxSignature] = useState('');
+
+            // Calculate META tokens to receive
+            useEffect(() => {
+                if (usdtAmount && !isNaN(usdtAmount)) {
+                    const meta = parseFloat(usdtAmount) * 100;
+                    setMetaAmount(meta.toFixed(2));
+                } else {
+                    setMetaAmount('0');
+                }
+            }, [usdtAmount]);
+
+            const connectPhantom = async () => {
+                try {
+                    setError('');
+                    const { solana } = window;
+
+                    if (!solana?.isPhantom) {
+                        setError('Phantom wallet not found! Please install it from phantom.app');
+                        return;
+                    }
+
+                    const response = await solana.connect();
+                    setWallet(solana);
+                    setConnected(true);
+                    console.log('Connected to Phantom:', response.publicKey.toString());
+                } catch (err) {
+                    setError('Failed to connect to Phantom: ' + err.message);
+                }
+            };
+
+            const connectSolflare = async () => {
+                try {
+                    setError('');
+                    const { solflare } = window;
+
+                    if (!solflare?.isSolflare) {
+                        setError('Solflare wallet not found! Please install it from solflare.com');
+                        return;
+                    }
+
+                    await solflare.connect();
+                    setWallet(solflare);
+                    setConnected(true);
+                    console.log('Connected to Solflare:', solflare.publicKey.toString());
+                } catch (err) {
+                    setError('Failed to connect to Solflare: ' + err.message);
+                }
+            };
+
+            const disconnect = async () => {
+                if (wallet) {
+                    await wallet.disconnect();
+                }
+                setWallet(null);
+                setConnected(false);
+                setError('');
+                setSuccess('');
+            };
+
+            const handleSwap = async () => {
+                if (!connected || !wallet) {
+                    setError('Please connect your wallet first');
+                    return;
+                }
+
+                if (!usdtAmount || parseFloat(usdtAmount) < 10) {
+                    setError('Minimum swap amount is 10 USDT');
+                    return;
+                }
+
+                setLoading(true);
+                setError('');
+                setSuccess('');
+                setTxSignature('');
+
+                try {
+                    // You'll need to implement the actual swap transaction here
+                    // This requires @solana/web3.js and @coral-xyz/anchor
+                    // See the swap.js file for the complete implementation
+
+                    setError('Please use the React component version with proper Anchor integration. See web/swap-component.jsx');
+
+                } catch (err) {
+                    console.error('Swap error:', err);
+                    setError('Swap failed: ' + err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="container">
+                    <h1>MetaH2O Token Swap</h1>
+                    <p className="subtitle">Swap USDT for META tokens at 1:100 ratio</p>
+
+                    {!connected ? (
+                        <div className="wallet-buttons">
+                            <button onClick={connectPhantom}>
+                                Connect Phantom
+                            </button>
+                            <button onClick={connectSolflare}>
+                                Connect Solflare
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="wallet-info">
+                                <div style={{marginBottom: '8px'}}>
+                                    <strong>Connected Wallet:</strong>
+                                </div>
+                                <div className="wallet-address">
+                                    {wallet.publicKey.toString()}
+                                </div>
+                            </div>
+                            <button className="disconnect-btn" onClick={disconnect}>
+                                Disconnect
+                            </button>
+                        </>
+                    )}
+
+                    {error && (
+                        <div className="alert alert-error">
+                            {error}
+                        </div>
+                    )}
+
+                    {success && (
+                        <div className="alert alert-success">
+                            {success}
+                            {txSignature && (
+                                <>
+                                    <br />
+                                    <a
+                                        href={`https://solscan.io/tx/${txSignature}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="tx-link"
+                                    >
+                                        View on Solscan
+                                    </a>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {connected && (
+                        <>
+                            <div className="input-group">
+                                <label>USDT Amount (Minimum 10)</label>
+                                <input
+                                    type="number"
+                                    min="10"
+                                    step="0.01"
+                                    value={usdtAmount}
+                                    onChange={(e) => setUsdtAmount(e.target.value)}
+                                    placeholder="Enter USDT amount"
+                                />
+                            </div>
+
+                            <div className="swap-info">
+                                <div className="swap-info-row">
+                                    <span className="swap-info-label">You Send:</span>
+                                    <span className="swap-info-value">{usdtAmount || '0'} USDT</span>
+                                </div>
+                                <div className="swap-info-row">
+                                    <span className="swap-info-label">You Receive:</span>
+                                    <span className="swap-info-value">{metaAmount} META</span>
+                                </div>
+                                <div className="swap-info-row">
+                                    <span className="swap-info-label">Rate:</span>
+                                    <span className="swap-info-value">1 USDT = 100 META</span>
+                                </div>
+                            </div>
+
+                            <div className="alert alert-info">
+                                Note: This is a demo UI. For production use, please use the proper React component with Anchor integration.
+                            </div>
+
+                            <button onClick={handleSwap} disabled={loading || !usdtAmount}>
+                                {loading && <span className="loading"></span>}
+                                {loading ? 'Processing...' : 'Swap Tokens'}
+                            </button>
+                        </>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

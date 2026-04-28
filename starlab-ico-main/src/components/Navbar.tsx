@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, userAddress } = useAuth();
   const { connecting, disconnect } = useWallet();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
@@ -53,9 +53,8 @@ const Navbar = () => {
     { href: "#about", label: "About", isAnchor: true },
     { href: "#tokenomics", label: "Tokenomics", isAnchor: true },
     { href: "#partners", label: "Partners", isAnchor: true },
-    { href: "/my-investments", label: "My Investment", isAnchor: false },
+    { href: "/dashboard", label: "Dashboard", isAnchor: false },
     { href: "/buy", label: "Buy Tokens", isAnchor: false },
-    ...(isAuthenticated ? [{ href: "/profile", label: "My Profile", isAnchor: false }] : []),
   ];
 
   return (

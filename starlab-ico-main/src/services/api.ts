@@ -49,6 +49,8 @@ export interface CreateTransactionRequest {
   amountPaid: number;
   tokensReceived: number;
   exchangeRate: number;
+  message?: string;
+  signature?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -77,10 +79,10 @@ class ApiService {
   }
 
   // Get user transactions by public key
-  async getUserTransactions(publicKey: string, limit = 50, offset = 0): Promise<Transaction[]> {
-    const response = await axiosInstance.get(`/users/${publicKey}/transactions?limit=${limit}&offset=${offset}`);
-    // Backend returns data.transactions
-    return response.data.data?.transactions || [];
+  async getUserTransactions(publicKey: string): Promise<Transaction[]> {
+    const response = await axiosInstance.get(`/transactions/${publicKey}`);
+    // Adjust to handle potential data nesting from the new endpoint
+    return response.data.data?.transactions || response.data.transactions || response.data.data || response.data || [];
   }
 
   // Get user statistics

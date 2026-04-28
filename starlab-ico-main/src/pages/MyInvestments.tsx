@@ -3,15 +3,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Wallet, TrendingUp, Clock, ArrowDownRight, Activity } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { api, type UserStats, type Transaction } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { PublicKey } from "@solana/web3.js";
+import { getAssociatedTokenAddress, getAccount } from "@solana/spl-token";
+import { CheckCircle2 } from "lucide-react";
+
+const STAR_TOKEN_MINT = new PublicKey(import.meta.env.VITE_STAR_MINT || "Baq6WjwcXX8pJBm5SALhCxWgjT5zFqHayBmGva52RNLF");
 
 const MyInvestments = () => {
   const { publicKey, connected } = useWallet();
+  const { connection } = useConnection();
   const { toast } = useToast();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [tokenBalance, setTokenBalance] = useState<number>(0);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -26,13 +33,24 @@ const MyInvestments = () => {
     setLoading(true);
     try {
       const publicKeyString = publicKey.toBase58();
+      
+      // Fetch STAR token balance (Live from blockchain)
+      try {
+        const ata = await getAssociatedTokenAddress(STAR_TOKEN_MINT, publicKey);
+        const balanceInfo = await connection.getTokenAccountBalance(ata);
+        setTokenBalance(balanceInfo.value.uiAmount || 0);
+      } catch (err) {
+        console.log("Error fetching token balance or ATA does not exist:", err);
+        setTokenBalance(0);
+      }
+
       const [userStats, userTransactions] = await Promise.all([
         api.getUserStats(publicKeyString),
         api.getUserTransactions(publicKeyString)
       ]);
 
       setStats(userStats);
-      setTransactions(userTransactions);
+      setTransactions(Array.isArray(userTransactions) ? userTransactions : []);
     } catch (error: any) {
       if (error.message.includes('404')) {
         setStats(null);
@@ -83,9 +101,8 @@ const MyInvestments = () => {
     );
   }
 
-  const totalTokens = stats?.total_tokens || 0;
   const totalInvested = (stats?.total_usdt_invested || 0) + ((stats?.total_sol_invested || 0) * 100);
-  const averagePrice = totalTokens > 0 ? totalInvested / totalTokens : 0;
+  const averagePrice = tokenBalance > 0 ? totalInvested / tokenBalance : 0;
 
   return (
     <div className="min-h-screen relative pt-24 pb-16 bg-background">
@@ -104,13 +121,18 @@ const MyInvestments = () => {
           </Link>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight mb-2">My Portfolio</h1>
-              <p className="text-muted-foreground text-lg">Track your holdings and recent activity.</p>
+              <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight mb-2">Investor Dashboard</h1>
+              <div className="flex items-center gap-2 text-muted-foreground bg-white/40 px-3 py-1.5 rounded-full border border-black/5 w-fit">
+                <Wallet className="h-4 w-4" />
+                <span className="font-mono text-sm">
+                  {publicKey?.toBase58().slice(0, 4)}...{publicKey?.toBase58().slice(-4)}
+                </span>
+              </div>
             </div>
             <Link to="/buy">
               <Button size="lg" className="bg-gradient-primary shadow-lg hover:shadow-xl text-primary-foreground font-bold px-8 transition-all rounded-xl">
                 <Activity className="mr-2 h-5 w-5" />
-                Buy Tokens
+                Invest More
               </Button>
             </Link>
           </div>
@@ -129,12 +151,12 @@ const MyInvestments = () => {
                 <CardHeader className="pb-2">
                   <CardDescription className="flex items-center gap-2 font-semibold text-muted-foreground uppercase text-xs tracking-wider">
                     <Wallet className="h-4 w-4 text-primary" />
-                    Total Holdings
+                    Live Balance
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-extrabold text-foreground tracking-tight">{totalTokens.toLocaleString()}</div>
-                  <p className="text-sm text-primary font-medium mt-1">STAR</p>
+                  <div className="text-4xl font-extrabold text-foreground tracking-tight">{tokenBalance.toLocaleString()}</div>
+                  <p className="text-sm text-primary font-medium mt-1">STAR (On-chain)</p>
                 </CardContent>
               </Card>
 
@@ -172,7 +194,7 @@ const MyInvestments = () => {
             {/* History Feed */}
             <Card className="glass-card border border-black/5 bg-white/80 shadow-md backdrop-blur-md">
               <CardHeader className="border-b border-black/5 pb-6 mb-2">
-                <CardTitle className="text-2xl font-bold text-foreground">Transaction History</CardTitle>
+                <CardTitle className="text-2xl font-bold text-foreground">Transaction History (Off-chain)</CardTitle>
                 <CardDescription className="text-base text-muted-foreground">Recent purchases and confirmed transfers</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
@@ -193,7 +215,7 @@ const MyInvestments = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {transactions.map((tx) => (
+                    {Array.isArray(transactions) && transactions.map((tx) => (
                       <div
                         key={tx.id}
                         className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl bg-white border border-black/5 shadow-sm hover:border-primary/30 hover:shadow-md transition-all"
@@ -212,15 +234,8 @@ const MyInvestments = () => {
                               <span>{new Date(tx.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                             </div>
                             <div className="flex items-center gap-1.5 mt-2">
-                              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">TXID:</span>
-                              <a 
-                                href={`https://explorer.solana.com/tx/${tx.transaction_hash}?cluster=devnet`} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-xs font-mono text-primary hover:underline"
-                              >
-                                {tx.transaction_hash.slice(0, 16)}...
-                              </a>
+                              <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                              <span className="text-xs font-semibold tracking-wider text-muted-foreground">Transaction confirmed on blockchain</span>
                             </div>
                           </div>
                         </div>

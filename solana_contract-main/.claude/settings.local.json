@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx ts-node scripts/test-swap.ts)",
+      "Bash(cargo install:*)",
+      "Bash(cargo:*)",
+      "Bash(curl:*)",
+      "Bash(solana program show:*)",
+      "Bash(anchor:*)",
+      "Bash(solana --version:*)",
+      "Bash(solana config:*)",
+      "Bash(solana address:*)",
+      "Bash(solana balance:*)"
+    ]
+  }
+}

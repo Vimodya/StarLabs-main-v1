@@ -1,0 +1,133 @@
+=====================================================
+SOLANA DEPLOYMENT - COPY & PASTE COMMANDS
+=====================================================
+
+Open PowerShell AS ADMINISTRATOR and run these commands:
+
+---------------------------------------------------
+STEP 1: Set Environment
+---------------------------------------------------
+$env:PATH = "$env:USERPROFILE\.cargo\bin;$env:USERPROFILE\solana-release\bin;$env:PATH"
+cd "D:\Advantage Group Australasia\solana_contract"
+
+---------------------------------------------------
+STEP 2: Check Installations
+---------------------------------------------------
+rustc --version
+solana --version
+
+---------------------------------------------------
+STEP 3: Configure Solana for Devnet
+---------------------------------------------------
+solana config set --url devnet
+solana config set --keypair owner-keypair.json
+solana config get
+
+---------------------------------------------------
+STEP 4: Check Wallet Address
+---------------------------------------------------
+solana address -k owner-keypair.json
+
+---------------------------------------------------
+STEP 5: Check & Fund Wallet
+---------------------------------------------------
+solana balance
+
+# If balance is low, request airdrops:
+solana airdrop 2
+solana airdrop 2
+solana airdrop 2
+
+# Check balance again (should be 5-6 SOL)
+solana balance
+
+# If airdrop fails, use: https://faucet.solana.com/
+# Paste your wallet address from step 4
+
+---------------------------------------------------
+STEP 6: Create Program Keypair (Contract Address)
+---------------------------------------------------
+New-Item -ItemType Directory -Force -Path ".\target\deploy"
+solana-keygen new -o .\target\deploy\metah2o_ico_contract-keypair.json --no-bip39-passphrase
+
+# Get the Program ID - COPY THIS!
+solana address -k .\target\deploy\metah2o_ico_contract-keypair.json
+
+---------------------------------------------------
+STEP 7: Update Program ID in Code
+---------------------------------------------------
+# YOU MUST UPDATE THE PROGRAM ID (from step 6) IN:
+
+1. programs\metah2o_ico_contract\src\lib.rs
+   Line 5: declare_id!("YOUR_PROGRAM_ID_HERE");
+
+2. Anchor.toml
+   Line 9:  metah2o_ico_contract = "YOUR_PROGRAM_ID_HERE"
+   Line 12: metah2o_ico_contract = "YOUR_PROGRAM_ID_HERE"
+
+---------------------------------------------------
+STEP 8: Build the Contract
+---------------------------------------------------
+cargo build-sbf
+
+# Verify build succeeded (should show file size)
+dir .\target\deploy\metah2o_ico_contract.so
+
+---------------------------------------------------
+STEP 9: Deploy to Devnet
+---------------------------------------------------
+solana program deploy .\target\deploy\metah2o_ico_contract.so --keypair owner-keypair.json --program-id .\target\deploy\metah2o_ico_contract-keypair.json
+
+---------------------------------------------------
+STEP 10: Verify Deployment
+---------------------------------------------------
+# Replace YOUR_PROGRAM_ID with the ID from step 6
+solana program show YOUR_PROGRAM_ID
+
+# Check remaining balance
+solana balance
+
+---------------------------------------------------
+STEP 11: Initialize Contract (After Deployment)
+---------------------------------------------------
+yarn install
+npx ts-node scripts/initialize-contract.ts
+npx ts-node scripts/initialize-vault.ts
+
+---------------------------------------------------
+ALTERNATIVE: Run Automated Script
+---------------------------------------------------
+Instead of running commands manually, use the automated script:
+
+.\deploy-complete.ps1
+
+This will guide you through all steps automatically!
+
+=====================================================
+TROUBLESHOOTING
+=====================================================
+
+Problem: "Insufficient funds"
+Solution: solana airdrop 2 (run multiple times)
+          Or use https://faucet.solana.com/
+
+Problem: "Failed to install platform-tools"
+Solution: Run PowerShell as Administrator
+
+Problem: "Program already exists"
+Solution: Use existing program ID or create new one
+
+Problem: Build fails
+Solution: Ensure running as Administrator
+          Check Rust is installed correctly
+
+=====================================================
+IMPORTANT ADDRESSES
+=====================================================
+
+Your Wallet Address: Run "solana address"
+Program ID: In target\deploy\metah2o_ico_contract-keypair.json
+Network: Devnet (https://api.devnet.solana.com)
+Explorer: https://explorer.solana.com/?cluster=devnet
+
+=====================================================

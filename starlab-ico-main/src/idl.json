@@ -1,0 +1,86 @@
+{
+  "version": "0.1.0",
+  "name": "metah2o_ico_contract",
+  "metadata": {
+    "name": "metah2o_ico_contract",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "StarLabs ICO token swap contract",
+    "address": "BzGwMb1Cp6P16CzYEiZUN3wfVCCz59Lwj3zV7EWtPDWr"
+  },
+  "address": "BzGwMb1Cp6P16CzYEiZUN3wfVCCz59Lwj3zV7EWtPDWr",
+  "instructions": [
+    {
+      "name": "swapTokens",
+      "discriminator": [201, 226, 234, 16, 70, 155, 131, 206],
+      "accounts": [
+        { "name": "state",                  "writable": false, "signer": false },
+        { "name": "user",                   "writable": true,  "signer": true  },
+        { "name": "userInputTokenAccount",  "writable": true,  "signer": false },
+        { "name": "userOutputTokenAccount", "writable": true,  "signer": false },
+        { "name": "inputTokenMint",         "writable": false, "signer": false },
+        { "name": "outputTokenMint",        "writable": false, "signer": false },
+        { "name": "ownerInputTokenAccount", "writable": true,  "signer": false },
+        { "name": "ownerWallet",            "writable": false, "signer": false },
+        { "name": "rewardVault",            "writable": true,  "signer": false },
+        { "name": "vaultAuthority",         "writable": false, "signer": false },
+        { "name": "tokenProgram",           "writable": false, "signer": false, "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" },
+        { "name": "associatedTokenProgram", "writable": false, "signer": false, "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJe1bsT" },
+        { "name": "systemProgram",          "writable": false, "signer": false, "address": "11111111111111111111111111111111" }
+      ],
+      "args": [
+        { "name": "inputAmount", "type": "u64" }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ContractState",
+      "discriminator": [190, 138, 10, 223, 189, 116, 222, 115]
+    }
+  ],
+  "types": [
+    {
+      "name": "ContractState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "isPaused",         "type": "bool"   },
+          { "name": "admin",            "type": "pubkey" },
+          { "name": "paymentRecipient", "type": "pubkey" }
+        ]
+      }
+    },
+    {
+      "name": "SwapEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "user",         "type": "pubkey" },
+          { "name": "inputAmount",  "type": "u64"    },
+          { "name": "outputAmount", "type": "u64"    },
+          { "name": "timestamp",    "type": "i64"    }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "SwapEvent",
+      "discriminator": [64, 198, 205, 232, 38, 8, 113, 226]
+    }
+  ],
+  "errors": [
+    { "code": 6000, "name": "BelowMinimumSwap",        "msg": "Input amount is below minimum swap amount (10 tokens)" },
+    { "code": 6001, "name": "CalculationOverflow",      "msg": "Calculation overflow occurred" },
+    { "code": 6002, "name": "InvalidPaymentRecipient",  "msg": "Invalid payment recipient wallet address" },
+    { "code": 6003, "name": "InvalidInputTokenMint",    "msg": "Invalid input token mint - must match configured payment token" },
+    { "code": 6004, "name": "InvalidOutputTokenMint",   "msg": "Invalid output token mint - must be STAR token" },
+    { "code": 6005, "name": "InsufficientRewardTokens", "msg": "Insufficient reward tokens in vault" },
+    { "code": 6006, "name": "InsufficientUserTokens",   "msg": "Insufficient user tokens for swap" },
+    { "code": 6007, "name": "ContractPaused",           "msg": "Contract is paused" },
+    { "code": 6008, "name": "Unauthorized",             "msg": "Unauthorized: Only owner can perform this action" },
+    { "code": 6009, "name": "InvalidVaultAuthority",    "msg": "Invalid vault authority" },
+    { "code": 6010, "name": "InvalidAddress",           "msg": "Invalid address - cannot be system program" }
+  ]
+}
