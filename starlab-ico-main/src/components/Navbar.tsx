@@ -52,7 +52,7 @@ const Navbar = () => {
   const navLinks = [
     { href: "#about", label: "About", isAnchor: true },
     { href: "#tokenomics", label: "Tokenomics", isAnchor: true },
-    { href: "#partners", label: "Partners", isAnchor: true },
+    // { href: "#partners", label: "Partners", isAnchor: true },
     { href: "/dashboard", label: "Dashboard", isAnchor: false },
     { href: "/buy", label: "Buy Tokens", isAnchor: false },
   ];

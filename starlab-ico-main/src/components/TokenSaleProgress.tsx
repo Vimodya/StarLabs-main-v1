@@ -38,7 +38,7 @@ const TokenSaleProgress = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4 text-foreground">Token Sale Coming Soon</h2>
+            {/* <h2 className="text-4xl font-bold mb-4 text-foreground">Token Sale Coming Soon</h2> */}
             <p className="text-muted-foreground text-lg">STAR tokens power rewards, access, and participation across the ecosystem</p>
           </div>
 

@@ -25,10 +25,10 @@ const Hero = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
 
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 backdrop-blur-md border border-primary/20 shadow-sm mb-8 hover:shadow-md transition-shadow">
+          {/* <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 backdrop-blur-md border border-primary/20 shadow-sm mb-8 hover:shadow-md transition-shadow">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-semibold tracking-wide text-foreground uppercase">TOKEN SALE COMING SOON</span>
-          </div>
+          </div> */}
 
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-[1.1] tracking-tight text-foreground">
             Invest in the <br />

@@ -5,7 +5,6 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import TokenSaleProgress from "@/components/TokenSaleProgress";
 import TopInvestors from "@/components/TopInvestors";
-import Partners from "@/components/Partners";
 import Tokenomics from "@/components/Tokenomics";
 import Footer from "@/components/Footer";
 
@@ -39,7 +38,6 @@ const Index = () => {
       <Hero />
       <TokenSaleProgress />
       {/* <TopInvestors /> */}
-      {/* <Partners /> */}
       <Tokenomics />
       {/* <Roadmap /> */}
       <Footer />

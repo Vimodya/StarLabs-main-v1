@@ -304,7 +304,7 @@ const BuyTokens = () => {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-5 gap-8 max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
           {/* Main Purchase Form Panel */}
           <Card className="lg:col-span-3 glass-card border-border/50 shadow-md bg-white/70 backdrop-blur-md">
             <CardHeader className="border-b border-black/5 pb-6 mb-6">
@@ -401,7 +401,7 @@ const BuyTokens = () => {
           </Card>
 
           {/* Sidebar Information Panels */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-1 space-y-6">
 
             {/* Security Card */}
             <Card className="bg-white/60 border-border/50 shadow-sm backdrop-blur-sm">
